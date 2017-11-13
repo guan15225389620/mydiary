@@ -28,7 +28,7 @@
     </footer>
     </div>
 </template>
-<script>
+<script> 
 import Vue from 'vue'
 import { mapState, mapMutations } from 'vuex'
 // import NewFolderModal from ''
@@ -56,7 +56,7 @@ Vue.use(vmodal)
             Scrollbar.init(document.querySelector('#main'))
         },
         activated () {
-            this.getFloder()
+            // this.getFloder()
             this.getInfo()
         },
         computed: mapState(['currentFolder', 'currentFolderName']),    
@@ -68,7 +68,18 @@ Vue.use(vmodal)
                 this.$modal.show('new-folder')
              },
              getInfo () {
-               
+               this.$axios
+               .get('/users/getinfo')
+               .then(res => {
+                 if(res.data.code === 0) {
+                    this.username = res.data.data.username
+                    this.nickname = res.data.data.nickname || '点击设置昵称'
+                    this.avatar = res.data.data.avatar || '/static/avatar.jpg'
+                 }
+               })
+              .catch(function(err){
+                console.log(err)
+              })
              }
         }
 
@@ -76,7 +87,7 @@ Vue.use(vmodal)
 </script>
 <style lang="less" scoped>
   @import '../assets/less/common.less';
-@black: #3c3c3c;
+  @black: #3c3c3c;
 .box() {
   float: left;
   box-sizing: border-box;

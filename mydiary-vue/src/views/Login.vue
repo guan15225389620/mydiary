@@ -24,7 +24,6 @@
                     name: this.username,
                     password: this.password
                 }
-                    console.log(data)
                 this.$axios.post('/users/login',data)
                 .then(res =>{
                     if(!data.name || !data.password) {

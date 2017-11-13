@@ -7,7 +7,6 @@ import axios from 'axios'
 axios.defaults.withCredentials = true
 axios.defaults.baseURL = 'http://localhost:3000';
 axios.interceptors.response.use(res => {
-  console.log(res.data)
   if (res.data && res.data.code === 11) {
     alert('登录失效')
     router.push('/login')

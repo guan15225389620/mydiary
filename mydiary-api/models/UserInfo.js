@@ -8,7 +8,10 @@ var schema = new mongoose.Schema({
     email: String,
     mobile: Number,
     gender: Number,
-    avatar: String
+    avatar: {
+        type:String,
+        default: 'http://localhost:3000/avatar/avatar.jpg'
+    }
 })
 
 var Model = mongoose.model('userinfo', schema)

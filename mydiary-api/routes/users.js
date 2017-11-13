@@ -1,9 +1,11 @@
 var express = require('express');
 var router = express.Router();
+var formidable = require('formidable')
+var fs = require('fs')
 var User = require('../models/User.js')
 var UserInfo = require('../models/UserInfo.js')
 var secure = require('../moudules/secure')
-
+var path = require('path')
 /* GET users listing. */
 router.route('/register')
   .post((req, res) => {
@@ -56,8 +58,7 @@ router.route('/getinfo')
         if(err) {
           res.json({
             code: 1,
-            message:'err',
-            err:err
+            message:err,
           })
         }
         res.json({
@@ -66,4 +67,77 @@ router.route('/getinfo')
         })
       })
   })
+router.route('/saveinfo')
+  .post((req, res) => {
+    UserInfo.findOneAndUpdate({
+      username: req.session.username
+    }, req.body, function (err, info) {
+      if (err) {
+        res.json({
+          code: 1,
+          message: err,  
+        })
+      }
+      res.json({
+        code: 0,
+        message: 'ok'
+      })
+    })
+  })
+
+router.route('/uploadavater')
+  .post((req,res) =>{
+      UserInfo.findOne({
+        username: req.session.username
+      },(err,info) => {
+        if(err) {
+          res.json({
+            code:1,
+            message:err,
+          })
+          return
+        }
+        var form = new formidable.IncomingForm()
+        console.log(form)
+          form.encoding = 'utf-8';
+          form.uploadDir = 'public/avatar/'
+          form.keepExtensions = true;
+          form.maxFieldsSize = 2 * 1024 * 1024;
+        form.parse(req,(err,fields,files) =>{
+          if(err){
+            res.send(err)
+            return
+          }
+          var extName = '';  //后缀名
+          switch (files.file.type) {
+            case 'image/pjpeg':
+              extName = 'jpg';
+              break;
+            case 'image/jpeg':
+              extName = 'jpg';
+              break;
+            case 'image/png':
+              extName = 'png';
+              break;
+            case 'image/x-png':
+              extName = 'png';
+              break;
+          }
+          if (extName.length == 0) {
+            res.send(err)
+            return
+          }   
+          var newName =  Date.now() + '.' + extName         
+          fs.renameSync(files.file.path, form.uploadDir + newName);  //重命名
+          info.avatar = 'http://localhost:3000/avatar/' + newName
+          info.save(function () {       
+                res.json({
+                  code: 0,
+                  data: info
+                })
+              })
+            });      
+        })
+      })
+
 module.exports = router;
