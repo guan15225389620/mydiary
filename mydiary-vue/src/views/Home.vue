@@ -2,19 +2,28 @@
     <div class="home">
     <header>
         <img :src="avatar" class ="img-circle" @click="toSetting">
-        <div>
+        <div  class="name" @click="toSetting"> 
          <div class="username">{{username}}</div>
          <div class="nickname">{{nickname}}</div>
         </div>
          <i class="iconfont icon-tianjia" @click="showNewFolderModal"></i>
     </header>
 
-    <div id="main">
+     <div id="main">
         <div class="scroll-content">
-            <div v-for="item in items" class="item">
-            </div>
+          <div v-for="item in items" class="item" :data-folderid="item._id" :data-total="item.total" :data-foldername="item.foldername" v-finger:long-tap="showDeleteModal" :data-type="item.type" @click="jump" :key="item._id">
+            <i class="iconfont" :class="transferToIcon(item.type)"></i>
+            <span>{{item.foldername}}</span>
+            <span class="total">
+              <span>{{item.total}}</span>
+              <i class="iconfont icon-next"></i>
+            </span>    
+          </div>
         </div>
-    </div>
+        <div class="scrollbar-track scrollbar-track-y">
+          <div class="scrollbar-thumb scrollbar-thumb-y"></div>
+        </div>
+     </div>
 
     <div id="search-result" class="container">
     </div>
@@ -26,22 +35,22 @@
         </div>
         <i class="iconfont icon-setting cog" @click="toSetting"></i> 
     </footer>
-    </div>
+    <new-folder-modal></new-folder-modal>
+    <delete-modal ref="DeleteModal"></delete-modal>
+  </div>
 </template>
 <script> 
 import Vue from 'vue'
 import { mapState, mapMutations } from 'vuex'
-// import NewFolderModal from ''
-// import NewFolderModal from '~/home/NewFolderModal'
-// import DeleteModal from '~/DeleteModal'
+import NewFolderModal from '../components/home/NewFolderModal'
+import DeleteModal from '../components/DeleteModal'
 import Scrollbar from 'smooth-scrollbar'
 import vmodal from 'vue-js-modal'
 Vue.use(vmodal)
-
     export default{
         components: {
-        //  NewFolderModal,
-        //  DeleteModal
+         NewFolderModal,
+         DeleteModal
         },
         data () {
             return {
@@ -56,11 +65,67 @@ Vue.use(vmodal)
             Scrollbar.init(document.querySelector('#main'))
         },
         activated () {
-            // this.getFloder()
+            this.getFolder()
             this.getInfo()
         },
         computed: mapState(['currentFolder', 'currentFolderName']),    
         methods: {
+            ...mapMutations([
+              'changeCurrentFolder',
+              'changeCurrentFolderName',
+              'changeCurrentCount'
+            ]),
+            transferToIcon (type) {
+              return (
+                'icon-' +
+                (type === 'diary'
+                  ? 'book'
+                  :type === 'contact'
+                    ? 'contact'
+                    : type === 'todolist' ? 'alert' :false)    
+              )
+            },
+            showDeleteModal (e) {
+              this.$refs.DeleteModal.isModalShow = true
+              var target = e.target
+              console.log(target)
+              while (!target.dataset.folderid) {
+                if(target.dataset.folderid) {
+                  break
+                }
+                target = target.parentNode
+              }
+              this.selectedItem = target.dataset.folderid
+              console.log(target.dataset)
+            },
+            deleteItem () {
+              this.$axios
+                .delete('/folder/' + this.selectedItem)
+                .then (res => {
+                  if (res.data.code === 0) {
+                    this.getFolder()
+                  }
+                })
+                .catch(function (error) {
+                  console.log(error)
+                })
+            },
+                jump (event) {
+                    var dataset = event.currentTarget.dataset
+                    let { type, folderid: id, foldername: name, total } = dataset
+                    this.changeCurrentFolder(id)
+                    this.changeCurrentFolderName(name)
+                    this.changeCurrentCount(total)
+                    if (type === 'diary') {
+                      this.$router.push('/diary/entries/')
+                    }
+                    if (type === 'contact') {
+                      this.$router.push('/phonebook/')
+                    }
+                    if (type === 'todolist') {
+                      this.$router.push('/todolist/')
+                    }
+                  },
             toSetting() {
                 this.$router.push('./setting')
             },
@@ -80,6 +145,20 @@ Vue.use(vmodal)
               .catch(function(err){
                 console.log(err)
               })
+             },
+             getFolder () {
+               this.$axios
+                .get('/folder')
+                .then(res => {
+                  if(res.data.code === 0) {
+                    this.items = res.data.data
+                      console.log(res.data)
+                  }
+               
+                })
+                .catch(function (error){
+                  console.log(error)
+                })
              }
         }
 
