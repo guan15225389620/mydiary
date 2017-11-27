@@ -5,8 +5,10 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+
 var users = require('./routes/users.js');
 var folder = require('./routes/folder.js')
+var diary = require('./routes/diary.js')
 var app = express();
 var session = require('express-session')
 
@@ -37,6 +39,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', users);
 app.use('/users', users)
 app.use('/',folder)
+app.use('/', diary)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');

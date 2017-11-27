@@ -17,7 +17,6 @@ export default {
     }
   },
   beforeRouteLeave (to, from, next) {
-    console.log(to.path, from.path)
     if (to.path === '/home') this.transitionName = 'slide-left'
     else this.transitionName = 'slide-right'
     next()
